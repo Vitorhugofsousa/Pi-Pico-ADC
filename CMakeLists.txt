@@ -23,7 +23,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2 CACHE STRING "Board type")
+set(PICO_BOARD pico_w CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -51,13 +51,17 @@ target_link_libraries(ADC
         hardware_gpio
         hardware_i2c
         hardware_pwm
-        hardware_uart
         hardware_clocks)
 
 # Add the standard include files to the build
 target_include_directories(ADC PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
+
+# Add any user requested libraries
+target_link_libraries(ADC 
+        
+        )
 
 pico_add_extra_outputs(ADC)
 
