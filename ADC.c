@@ -162,12 +162,14 @@ int main(){
             ssd1306_fill(&ssd, !cor); // Limpa o display
             if (frame_mode){
                 quadrado_largura = 8;
+                quadrado_altura = 7;
                 ssd1306_rect(&ssd, 5, 5, 118, 56, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, 7, 7, 114, 52, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, quadrado_x, quadrado_y, quadrado_largura, quadrado_altura, cor, 0); // Desenha o quadrado
             }else if (!frame_mode){
-                quadrado_largura = 7;
+                quadrado_largura = 13;
+                quadrado_altura = 3;
                 ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, quadrado_x, quadrado_y, quadrado_largura, quadrado_altura, cor, 1); // Desenha o quadrado
             }
