@@ -24,6 +24,7 @@
 uint actual_time = 0;
 bool led_mode = false;
 bool frame_mode = false;
+bool display_mode = true;
 ssd1306_t ssd;
 
 uint pwm_init_gpio(uint gpio, uint wrap) {
@@ -50,12 +51,21 @@ void callback_abtn(uint gpio, uint32_t events) {
             }
         }
         
+        if (gpio == BOTAO_B){
+            display_mode = !display_mode;            
+            printf("Joystick: %s\n", display_mode ? "Display Habilitado" : "Display Desabilitado");
+            
+            if (!display_mode){
+                ssd1306_fill(&ssd, false); // Limpa o display
+                ssd1306_send_data(&ssd);
+            }
+        }
+        
         if (gpio == SW_PIN){
             frame_mode = !frame_mode;
             printf("Joystick: %s\n", frame_mode ? "Frame Mode Habilitado" : "Frame Mode Desabilitado");
         }
         
-
 
     }
     
@@ -82,6 +92,9 @@ int main(){
     gpio_init(BOTAO_A);
     gpio_set_dir(BOTAO_A, GPIO_IN);
     gpio_pull_up(BOTAO_A);
+    gpio_init(BOTAO_B);
+    gpio_set_dir(BOTAO_B, GPIO_IN);
+    gpio_pull_up(BOTAO_B);
 
     i2c_init(I2C_PORT, 400 * 1000);
 
@@ -115,6 +128,7 @@ int main(){
     
     gpio_set_irq_enabled_with_callback(SW_PIN, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);
     gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);  
+    gpio_set_irq_enabled_with_callback(BOTAO_B, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);  
 
     while (true) {
         adc_select_input(0); 
@@ -148,11 +162,12 @@ int main(){
                 pwm_set_gpio_level(LED_PIN_BLUE, blue_level);  
         }
             
-            uint16_t vry_value_inverter = 4095 - vry_value;
-            quadrado_x = 30 + (vrx_value - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
-            quadrado_y = 62 + (vry_value_inverter - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
-            
-            // Limites para o quadrado não sair da tela
+        if (display_mode){
+                uint16_t vry_value_inverter = 4095 - vry_value;
+                quadrado_x = 30 + (vrx_value - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+                quadrado_y = 62 + (vry_value_inverter - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+                
+                // Limites para o quadrado não sair da tela
             if (quadrado_x < 3) quadrado_x = 3;
             if (quadrado_x > 125 - quadrado_largura) quadrado_x = 125 - quadrado_largura;
             if (quadrado_y < 3) quadrado_y = 3;
@@ -167,7 +182,7 @@ int main(){
                 ssd1306_rect(&ssd, 7, 7, 114, 52, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, quadrado_x, quadrado_y, quadrado_largura, quadrado_altura, cor, 0); // Desenha o quadrado
-            }else if (!frame_mode){
+            }else{
                 quadrado_largura = 13;
                 quadrado_altura = 3;
                 ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
@@ -175,6 +190,7 @@ int main(){
             }
             
             ssd1306_send_data(&ssd); // Atualiza o display
+        }
             
             
             sleep_ms(100);
