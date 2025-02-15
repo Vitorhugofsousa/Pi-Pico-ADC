@@ -22,7 +22,7 @@
 #define display_address 0x3C //endereço do display
 
 uint actual_time = 0;
-bool joystick_mode = false;
+bool led_mode = false;
 
 uint pwm_init_gpio(uint gpio, uint wrap) {
     gpio_set_function(gpio, GPIO_FUNC_PWM);
@@ -39,10 +39,10 @@ void callback_abtn(uint gpio, uint32_t events) {
     if (time - actual_time > 300) {
         actual_time = time;
         if (gpio == BOTAO_A){
-            joystick_mode = !joystick_mode;
-            printf("Joystick: %s\n", joystick_mode ? "Led Desabilitado" : " Led Habilitado");
+            led_mode = !led_mode;
+            printf("Joystick: %s\n", led_mode ? "Led Desabilitado" : " Led Habilitado");
        
-            if (joystick_mode){
+            if (led_mode){
                 pwm_set_gpio_level(LED_PIN_RED, 0);
                 pwm_set_gpio_level(LED_PIN_BLUE, 0);
                 gpio_put(LED_PIN_GREEN, false);
@@ -98,65 +98,82 @@ int main(){
     uint32_t last_print_time = 0; 
     
     uint16_t vrx_value;
-    uint16_t vry_value;
+    uint16_t vry_value = !vry_value;
     char str_x[5];
     char str_y[5];
-
+    
     bool cor = true;
-
+    
+    int quadrado_x = 30; // Posição inicial x do quadrado
+    int quadrado_y = 30; // Posição inicial y do quadrado
+    int quadrado_largura = 7;
+    int quadrado_altura = 7;
+    
     gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);  
     while (true) {
         adc_select_input(0); 
         vrx_value = adc_read(); 
-
+        
         adc_select_input(1); 
         vry_value = adc_read(); 
         
-        if (!joystick_mode) {
-             
-             int blue_level = 0;
-             int red_level = 0;
-             bool sw_value = gpio_get(SW_PIN) == 0; 
-             if (vrx_value > 2400) {
-                 red_level = vrx_value - 2400; 
-             } else if (vrx_value < 1700){
-                 red_level = 1700 - vrx_value;
-             }
-             
-             if (vry_value > 2400) {
-                 blue_level = vry_value - 2400; 
-             } else if (vry_value < 1700){
-                 blue_level = 1700 - vry_value;
+        if (!led_mode) {
+            
+            int blue_level = 0;
+            int red_level = 0;
+            bool sw_value = gpio_get(SW_PIN) == 0; 
+            if (vrx_value > 2400) {
+                red_level = vrx_value - 2400; 
+            } else if (vrx_value < 1700){
+                red_level = 1700 - vrx_value;
+            }
+            
+            if (vry_value > 2400) {
+                blue_level = vry_value - 2400; 
+            } else if (vry_value < 1700){
+                blue_level = 1700 - vry_value;
              }
              
              if (sw_value) { 
                  gpio_put(LED_PIN_GREEN, true); 
-             } else {
-                 gpio_put(LED_PIN_GREEN, false);
-             }
-     
-             pwm_set_gpio_level(LED_PIN_RED, red_level);
-             pwm_set_gpio_level(LED_PIN_BLUE, blue_level);
-     
-     
-             uint32_t current_time = to_ms_since_boot(get_absolute_time());
-             if (current_time - last_print_time > 1000) {
-             //    printf("VRX: %u, VRY: %u, SW: %d\n", vrx_value, vry_value, sw_value);
-                 last_print_time = current_time;
-             }
-             
-
-         }
-         
-         ssd1306_fill(&ssd, !cor); // Limpa o display
-         ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
-         ssd1306_rect(&ssd, 5, 5, 118, 56, cor, !cor); // Desenha um retângulo
-         ssd1306_rect(&ssd, 7, 7, 114, 52, cor, !cor); // Desenha um retângulo
-         ssd1306_rect(&ssd, 30, 62, 7, 7, cor, !gpio_get(SW_PIN));
-         ssd1306_send_data(&ssd); // Atualiza o display
-        
-        
-        sleep_ms(100);
+                } else {
+                    gpio_put(LED_PIN_GREEN, false);
+                }
+                
+                pwm_set_gpio_level(LED_PIN_RED, red_level);
+                pwm_set_gpio_level(LED_PIN_BLUE, blue_level);
+                
+                
+                uint32_t current_time = to_ms_since_boot(get_absolute_time());
+                if (current_time - last_print_time > 1000) {
+                    //    printf("VRX: %u, VRY: %u, SW: %d\n", vrx_value, vry_value, sw_value);
+                    last_print_time = current_time;
+                }
+                
+                
+            }
+            
+            uint16_t vry_value_inverter = 4095 - vry_value;
+            quadrado_x = 30 + (vrx_value - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+            quadrado_y = 62 + (vry_value_inverter - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+            
+            // Limites para o quadrado não sair da tela
+            if (quadrado_x < 3) quadrado_x = 3;
+            if (quadrado_x > 125 - quadrado_largura) quadrado_x = 125 - quadrado_largura;
+            if (quadrado_y < 3) quadrado_y = 3;
+            if (quadrado_y > 90 - quadrado_altura) quadrado_y = 90 - quadrado_altura;
+            
+            
+            ssd1306_fill(&ssd, !cor); // Limpa o display
+            ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
+            ssd1306_rect(&ssd, 5, 5, 118, 56, cor, !cor); // Desenha um retângulo
+            ssd1306_rect(&ssd, 7, 7, 114, 52, cor, !cor); // Desenha um retângulo
+            ssd1306_rect(&ssd, quadrado_x, quadrado_y, quadrado_largura, quadrado_altura, cor, 1); // Desenha o quadrado
+            ssd1306_send_data(&ssd); // Atualiza o display
+            
+            
+            sleep_ms(100);
+        }
+        return 0;
     }
-    return 0;
-}
+    
