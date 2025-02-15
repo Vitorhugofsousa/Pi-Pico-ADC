@@ -123,7 +123,7 @@ int main(){
     
     int quadrado_x = 30; // Posição inicial x do quadrado
     int quadrado_y = 30; // Posição inicial y do quadrado
-    int quadrado_largura = 12;
+    int quadrado_largura = 8;
     int quadrado_altura = 7;
     
     gpio_set_irq_enabled_with_callback(SW_PIN, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);
@@ -165,26 +165,22 @@ int main(){
         if (display_mode){
                 uint16_t vrx_value_inverter = 4095 - vrx_value;
                 quadrado_x = 30 + (vrx_value_inverter - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
-                quadrado_y = 62 + (vry_value - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+                quadrado_y = 62 + (vry_value - 2048) / 35; // Ajuste o divisor para controlar a sensibilidade
                 
                 // Limites para o quadrado não sair da tela
-            if (quadrado_x < 3) quadrado_x = 3;
-            if (quadrado_x > 125 - quadrado_largura) quadrado_x = 125 - quadrado_largura;
-            if (quadrado_y < 3) quadrado_y = 3;
-            if (quadrado_y > 90 - quadrado_altura) quadrado_y = 90 - quadrado_altura;
+            if (quadrado_x < 2) quadrado_x = 2;
+            if (quadrado_x > 135 - quadrado_largura) quadrado_x = 135 - quadrado_largura;
+            if (quadrado_y < 10) quadrado_y = 10;
+            if (quadrado_y > 118 - quadrado_altura) quadrado_y = 118 - quadrado_altura;
             
             
             ssd1306_fill(&ssd, !cor); // Limpa o display
             if (frame_mode){
-                quadrado_largura = 8;
-                quadrado_altura = 7;
                 ssd1306_rect(&ssd, 5, 5, 118, 56, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, 7, 7, 114, 52, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, quadrado_x, quadrado_y, quadrado_largura, quadrado_altura, cor, 0); // Desenha o quadrado
             }else{
-                quadrado_largura = 13;
-                quadrado_altura = 3;
                 ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
                 ssd1306_rect(&ssd, quadrado_x, quadrado_y, quadrado_largura, quadrado_altura, cor, 1); // Desenha o quadrado
             }
