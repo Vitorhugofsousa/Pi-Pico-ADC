@@ -20,6 +20,9 @@
 #define I2C_PORT i2c1 //porta I2C
 #define display_address 0x3C //endereço do display
 
+uint actual_time = 0;
+bool joystick_mode = false;
+
 uint pwm_init_gpio(uint gpio, uint wrap) {
     gpio_set_function(gpio, GPIO_FUNC_PWM);
 
@@ -28,6 +31,28 @@ uint pwm_init_gpio(uint gpio, uint wrap) {
 
     pwm_set_enabled(slice_num, true);
     return slice_num;
+}
+
+void callback_abtn(uint gpio, uint32_t events) {
+    uint time = to_ms_since_boot(get_absolute_time());
+    if (time - actual_time > 300) {
+        actual_time = time;
+        if (gpio == BOTAO_A){
+            joystick_mode = !joystick_mode;
+            printf("Joystick: %s\n", joystick_mode ? "Led Desabilitado" : " Led Habilitado");
+       
+            if (joystick_mode){
+                pwm_set_gpio_level(LED_PIN_RED, 0);
+                pwm_set_gpio_level(LED_PIN_BLUE, 0);
+                gpio_put(LED_PIN_GREEN, false);
+            }
+            
+            // printf("Botão A\n");
+        }
+        
+
+    }
+    
 }
 
 int main(){
@@ -47,52 +72,62 @@ int main(){
     gpio_init(LED_PIN_BLUE);
     gpio_set_dir(LED_PIN_BLUE, GPIO_OUT);
     gpio_put(LED_PIN_BLUE, false);
+    gpio_init(BOTAO_A);
+    gpio_set_dir(BOTAO_A, GPIO_IN);
+    gpio_pull_up(BOTAO_A);
     
     uint pwm_wrap = 4096;  
     uint red_pwm_slice = pwm_init_gpio(LED_PIN_RED, pwm_wrap);  
     uint blue_pwm_slice = pwm_init_gpio(LED_PIN_BLUE, pwm_wrap);  
     uint32_t last_print_time = 0; 
     
+    gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);  
 
     while (true) {
-        adc_select_input(0); 
-        uint16_t vrx_value = adc_read(); 
-
-        adc_select_input(1); 
-        uint16_t vry_value = adc_read(); 
-
-        int red_level = 0;
-        bool sw_value = gpio_get(SW_PIN) == 0; 
         
-        if (vrx_value > 2400) {
-            red_level = vrx_value - 2400; 
-        } else if (vrx_value < 1700){
-            red_level = 1700 - vrx_value;
-        }
-        
-        int blue_level = 0;
-        if (vry_value > 2400) {
-            blue_level = vry_value - 2400; 
-        } else if (vry_value < 1700){
-            blue_level = 1700 - vry_value;
-        }
-        
-        
-        if (sw_value) { 
-            gpio_put(LED_PIN_GREEN, true); 
-        } else {
-            gpio_put(LED_PIN_GREEN, false);
-        }
+        if (!joystick_mode) {
+             adc_select_input(0); 
+             uint16_t vrx_value = adc_read(); 
+     
+             adc_select_input(1); 
+             uint16_t vry_value = adc_read(); 
+             
+             int blue_level = 0;
+             int red_level = 0;
+             bool sw_value = gpio_get(SW_PIN) == 0; 
+             if (vrx_value > 2400) {
+                 red_level = vrx_value - 2400; 
+             } else if (vrx_value < 1700){
+                 red_level = 1700 - vrx_value;
+             }
+             
+             if (vry_value > 2400) {
+                 blue_level = vry_value - 2400; 
+             } else if (vry_value < 1700){
+                 blue_level = 1700 - vry_value;
+             }
+             
+             if (sw_value) { 
+                 gpio_put(LED_PIN_GREEN, true); 
+             } else {
+                 gpio_put(LED_PIN_GREEN, false);
+             }
+     
+             pwm_set_gpio_level(LED_PIN_RED, red_level);
+             pwm_set_gpio_level(LED_PIN_BLUE, blue_level);
+     
+     
+             uint32_t current_time = to_ms_since_boot(get_absolute_time());
+             if (current_time - last_print_time > 1000) {
+             //    printf("VRX: %u, VRY: %u, SW: %d\n", vrx_value, vry_value, sw_value);
+                 last_print_time = current_time;
+             }
+             
 
-        pwm_set_gpio_level(LED_PIN_RED, red_level);
-        pwm_set_gpio_level(LED_PIN_BLUE, blue_level);
-
-
-        uint32_t current_time = to_ms_since_boot(get_absolute_time());
-        if (current_time - last_print_time > 1000) {
-            printf("VRX: %u, VRY: %u, SW: %d\n", vrx_value, vry_value, sw_value);
-            last_print_time = current_time;
-        }
+         }
+         
+        
+        
         sleep_ms(100);
     }
     return 0;
