@@ -5,7 +5,8 @@
 #include "hardware/i2c.h"
 #include "hardware/clocks.h"
 #include "hardware/pwm.h"     
-
+#include "lib/font.h"
+#include "lib/ssd1306.h"
 
 #define BOTAO_A 5 //pino saida botao a
 #define BOTAO_B 6 //pino saida botao b
@@ -75,22 +76,43 @@ int main(){
     gpio_init(BOTAO_A);
     gpio_set_dir(BOTAO_A, GPIO_IN);
     gpio_pull_up(BOTAO_A);
+
+    i2c_init(I2C_PORT, 400 * 1000);
+
+    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(I2C_SDA);
+    gpio_pull_up(I2C_SCL);
+    ssd1306_t ssd;
+    ssd1306_init(&ssd, WIDTH, HEIGHT, false, display_address, I2C_PORT);
+    ssd1306_config(&ssd);
+    ssd1306_send_data(&ssd);
+    
+    ssd1306_fill(&ssd, false);
+    ssd1306_send_data(&ssd);
+
     
     uint pwm_wrap = 4096;  
     uint red_pwm_slice = pwm_init_gpio(LED_PIN_RED, pwm_wrap);  
     uint blue_pwm_slice = pwm_init_gpio(LED_PIN_BLUE, pwm_wrap);  
     uint32_t last_print_time = 0; 
     
-    gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);  
+    uint16_t vrx_value;
+    uint16_t vry_value;
+    char str_x[5];
+    char str_y[5];
 
+    bool cor = true;
+
+    gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);  
     while (true) {
+        adc_select_input(0); 
+        vrx_value = adc_read(); 
+
+        adc_select_input(1); 
+        vry_value = adc_read(); 
         
         if (!joystick_mode) {
-             adc_select_input(0); 
-             uint16_t vrx_value = adc_read(); 
-     
-             adc_select_input(1); 
-             uint16_t vry_value = adc_read(); 
              
              int blue_level = 0;
              int red_level = 0;
@@ -126,6 +148,12 @@ int main(){
 
          }
          
+         ssd1306_fill(&ssd, !cor); // Limpa o display
+         ssd1306_rect(&ssd, 3, 3, 122, 60, cor, !cor); // Desenha um retângulo
+         ssd1306_rect(&ssd, 5, 5, 118, 56, cor, !cor); // Desenha um retângulo
+         ssd1306_rect(&ssd, 7, 7, 114, 52, cor, !cor); // Desenha um retângulo
+         ssd1306_rect(&ssd, 30, 62, 7, 7, cor, !gpio_get(SW_PIN));
+         ssd1306_send_data(&ssd); // Atualiza o display
         
         
         sleep_ms(100);
