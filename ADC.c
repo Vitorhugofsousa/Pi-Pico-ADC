@@ -22,9 +22,9 @@
 #define display_address 0x3C //endereço do display
 
 uint actual_time = 0;
-bool led_mode = false;
-bool frame_mode = false;
+bool led_mode = true;
 bool display_mode = true;
+bool frame_mode = false;
 ssd1306_t ssd;
 
 uint pwm_init_gpio(uint gpio, uint wrap) {
@@ -44,7 +44,7 @@ void callback_abtn(uint gpio, uint32_t events) {
         if (gpio == BOTAO_A){
             led_mode = !led_mode;
             printf("Joystick: %s\n", led_mode ? "Led Desabilitado" : " Led Habilitado");
-            if (led_mode){
+            if (!led_mode){
                 pwm_set_gpio_level(LED_PIN_RED, 0);
                 pwm_set_gpio_level(LED_PIN_BLUE, 0);
                 gpio_put(LED_PIN_GREEN, false);
@@ -138,7 +138,7 @@ int main(){
         vry_value = adc_read(); 
         
         bool sw_value = gpio_get(SW_PIN) == 0; 
-        if (!led_mode) {
+        if (led_mode) {
             int blue_level = 0;
             int red_level = 0;
             if (vrx_value > 2400) {
