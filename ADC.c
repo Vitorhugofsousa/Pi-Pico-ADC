@@ -115,7 +115,7 @@ int main(){
     uint32_t last_print_time = 0; 
     
     uint16_t vrx_value;
-    uint16_t vry_value = !vry_value;
+    uint16_t vry_value;
     char str_x[5];
     char str_y[5];
     
@@ -163,9 +163,9 @@ int main(){
         }
             
         if (display_mode){
-                uint16_t vry_value_inverter = 4095 - vry_value;
-                quadrado_x = 30 + (vrx_value - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
-                quadrado_y = 62 + (vry_value_inverter - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+                uint16_t vrx_value_inverter = 4095 - vrx_value;
+                quadrado_x = 30 + (vrx_value_inverter - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
+                quadrado_y = 62 + (vry_value - 2048) / 100; // Ajuste o divisor para controlar a sensibilidade
                 
                 // Limites para o quadrado não sair da tela
             if (quadrado_x < 3) quadrado_x = 3;
