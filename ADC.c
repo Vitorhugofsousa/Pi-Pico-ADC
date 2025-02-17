@@ -30,7 +30,7 @@ bool display_mode = true;
 bool frame_mode = false;
 ssd1306_t ssd;
 
-//Função para inicializar um pino GPIO para PWM
+//Função para inicializar e definir um pino GPIO para PWM
 uint pwm_init_gpio(uint gpio, uint wrap) {
     gpio_set_function(gpio, GPIO_FUNC_PWM); //define o pino com função PWM
     uint slice_num = pwm_gpio_to_slice_num(gpio);   // Obtém o número da fatia PWM associada ao pino
