@@ -132,7 +132,7 @@ int main(){
     int quadrado_x = 30;    // Posição inicial X do quadrado no display
     int quadrado_y = 30;    // Posição inicial Y do quadrado no display
     int quadrado_largura = 8; // Largura do quadrado no display
-    int quadrado_altura = 7; // Altura do quadrado no display
+    int quadrado_altura = 8; // Altura do quadrado no display
 
     // Configura as interrupções para os botões A, B e SW
     gpio_set_irq_enabled_with_callback(SW_PIN, GPIO_IRQ_EDGE_FALL, true, &callback_abtn);
@@ -154,15 +154,15 @@ int main(){
             
             // Mapeia os valores lidos do joystick para o nível de brilho dos LEDs
             if (vrx_value > 2400) {
-                red_level = vrx_value - 2400;   // Aumenta o brilho do LED vermelho se VRX > 2400
+                blue_level = vrx_value - 2400;   // Aumenta o brilho do LED vermelho se VRX > 2400
             } else if (vrx_value < 1700){
-                red_level = 1700 - vrx_value;   // Aumenta o brilho do LED vermelho se VRX < 1700
+                blue_level = 1700 - vrx_value;   // Aumenta o brilho do LED vermelho se VRX < 1700
             }
             
             if (vry_value > 2400) {
-                blue_level = vry_value - 2400; // Aumenta o brilho do LED azul se VRY > 2400
+                red_level = vry_value - 2400; // Aumenta o brilho do LED azul se VRY > 2400
             } else if (vry_value < 1700) {
-                blue_level = 1700 - vry_value; // Aumenta o brilho do LED azul se VRY < 1700
+                red_level = 1700 - vry_value; // Aumenta o brilho do LED azul se VRY < 1700
             }
              
             if (sw_value) {
@@ -184,8 +184,8 @@ int main(){
                 quadrado_y = 62 + (vry_value - 2048) / 35; // Ajuste o divisor para controlar a sensibilidade
                 
                 // Limites para o quadrado não sair da tela
-            if (quadrado_x < 2) quadrado_x = 2;
-            if (quadrado_x > 135 - quadrado_largura) quadrado_x = 135 - quadrado_largura;
+            if (quadrado_x < 3) quadrado_x = 3;
+            if (quadrado_x > 118 - quadrado_largura) quadrado_x = 118 - quadrado_largura;
             if (quadrado_y < 10) quadrado_y = 10;
             if (quadrado_y > 118 - quadrado_altura) quadrado_y = 118 - quadrado_altura;
             
