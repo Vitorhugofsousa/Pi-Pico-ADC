@@ -39,7 +39,6 @@ __Botão JoysTick (SW_PIN)__: Ao pressionar o botão com a exibição de LED's a
 __Botão A__: Ao pressionar o __botão A__ a exibição dos LED's será desativada, pressionando novamente será reativada.<br>
 __Botão B__: Ao pressionar o __botão B__ a exibição do display será desativada, pressionando novamente será reativada.<br>
 
-#### Ao clicar __[Aqui](https://youtu.be/Fy0wzCUtTwc)__ verá um vídeo no __YouTube__ explicando o funcionamento completo do Código.
 
 # Contribuições
 
